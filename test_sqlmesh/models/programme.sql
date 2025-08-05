@@ -2,7 +2,7 @@ MODEL (
     name programme,
     kind FULL,
     cron '@daily',
-    gateway postgres,
+    gateway mysql_target,
     description 'Academic programmes'
 );
 

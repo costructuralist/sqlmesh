@@ -1,18 +1,15 @@
-models:
-  # Example: Academies table from MySQL sunshine database
-  mysql_source.sunshine.academies:
-    gateway: mysql_source
-    columns:
-      id: INT
-      academicTypeCode: VARCHAR(255)
-      academyName: VARCHAR(255)
-    description: Academy information from MySQL sunshine database
+- name: mysql_source.sunshine.academies
+  gateway: mysql_source
+  columns:
+    id: INT
+    academicTypeCode: VARCHAR(255)
+    academyName: VARCHAR(255)
+  description: Academy information from MySQL sunshine database
     
-  # Example: Students table from MySQL sunshine database  
-  mysql_source.sunshine.programs:
-    gateway: mysql_source
-    columns:
-      id: INT
-      programCode: VARCHAR(255)
-      programName: VARCHAR(255)
-    description: Academic programmes from MySQL sunshine database
+- name: mysql_source.sunshine.programs
+  gateway: mysql_source
+  columns:
+    id: INT
+    programCode: VARCHAR(255)
+    programName: VARCHAR(255)
+  description: Academic programmes from MySQL sunshine database

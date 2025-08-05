@@ -2,7 +2,7 @@ MODEL (
     name academy,
     kind FULL,
     cron '@daily',
-    gateway postgres,
+    gateway mysql_target,
     description 'Academy summary with student and course counts'
 );
 
