@@ -19,10 +19,10 @@ def test_connection_config():
     
     # Test pymysql (default)
     config_pymysql = MySQLConnectionConfig(
-        host="localhost",
-        user="root",
+        host="sii-server",
+        user="ewuys",
         password="your_password",
-        database="test",
+        database="sunshine",
     )
     print(f"PyMySQL driver: {config_pymysql.driver}")
     
@@ -33,10 +33,10 @@ def test_connection_config():
         return
         
     config_pyodbc = MySQLConnectionConfig(
-        host="localhost",
-        user="root",
+        host="sii-server",
+        user="ewuys",
         password="your_password",
-        database="test",
+        database="sunshine",
         driver="pyodbc",
         driver_name=driver_name,
     )
@@ -55,15 +55,15 @@ def test_sqlmesh_context():
     configs = {
         "pymysql": {
             "type": "mysql",
-            "host": "localhost",
-            "user": "root",
+            "host": "sii-server",
+            "user": "ewuys",
             "password": "your_password",
             "database": "test",
         },
         "pyodbc": {
             "type": "mysql",
-            "host": "localhost", 
-            "user": "root",
+            "host": "sii-server", 
+            "user": "ewuys",
             "password": "your_password",
             "database": "test",
             "driver": "pyodbc",
@@ -95,7 +95,7 @@ def test_raw_pyodbc():
     if not driver_name:
         return
         
-    conn_str = f"DRIVER={{{driver_name}}};SERVER=localhost;DATABASE=test;UID=root;PWD=your_password"
+    conn_str = f"DRIVER={{{driver_name}}};SERVER=sii-server;DATABASE=test;UID=ewuys;PWD=your_password"
     
     try:
         conn = pyodbc.connect(conn_str)
