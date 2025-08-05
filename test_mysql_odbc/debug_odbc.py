@@ -9,8 +9,8 @@ for driver in pyodbc.drivers():
 
 # Test connection string formats
 test_strings = [
-    "DRIVER={MySQL ODBC 8.0 Unicode Driver};SERVER=localhost;PORT=3306;DATABASE=test;UID=root;PWD=password",
-    "DRIVER={MySQL ODBC 8.0 ANSI Driver};SERVER=localhost;PORT=3306;DATABASE=test;UID=root;PWD=password",
+    "DRIVER={MySQL ODBC 9.3 Unicode Driver};SERVER=sii-server;PORT=3306;DATABASE=sunshine;UID=ewuys;Authentication=Windows",
+    "DRIVER={MySQL ODBC 9.3 ANSI Driver};SERVER=sii-server;PORT=3306;DATABASE=sunshine;UID=ewuys;Authentication=Windows",
 ]
 
 for conn_str in test_strings:
