@@ -1,0 +1,17 @@
+[project]
+name = "mysql-odbc-test"
+version = "0.1.0"
+dependencies = [
+    "sqlmesh @ file:///C:/Source/data/sqlmesh",  # Use absolute path for Windows
+    "pymysql",
+    "pyodbc",
+]
+
+[tool.uv]
+dev-dependencies = [
+    "pytest",
+    "ipython",
+]
+
+[tool.setuptools]
+py-modules = []  # Tell setuptools we don't have any modules to package

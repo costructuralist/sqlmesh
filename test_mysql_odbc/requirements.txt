@@ -1,0 +1,5 @@
+pymysql
+pyodbc
+pytest
+ipython
+-e ../.  # Install SQLMesh from parent directory
