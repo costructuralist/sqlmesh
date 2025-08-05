@@ -3,6 +3,7 @@
 
 import pyodbc
 from sqlmesh.core.config.connection import MySQLConnectionConfig
+from sqlmesh.core.config import Config, GatewayConfig
 from sqlmesh import Context
 
 def list_mysql_drivers():
@@ -52,32 +53,31 @@ def test_sqlmesh_context():
         return
     
     # Test configurations
-    configs = {
-        "pymysql": {
-            "type": "mysql",
-            "host": "sii-server",
-            "user": "ewuys",
-            "password": "your_password",
-            "database": "test",
-        },
-        "pyodbc": {
-            "type": "mysql",
-            "host": "sii-server", 
-            "user": "ewuys",
-            "password": "your_password",
-            "database": "test",
-            "driver": "pyodbc",
-            "driver_name": driver_name,
-        }
+    connection_configs = {
+        # "pymysql": MySQLConnectionConfig(
+        #     host="sii-server",
+        #     user="ewuys",
+        #     password="your_password",
+        #     database="sunshine",
+        # ),
+        "pyodbc": MySQLConnectionConfig(
+            host="sii-server", 
+            user="ewuys",
+            password="your_password",
+            database="sunshine",
+            driver="pyodbc",
+            driver_name=driver_name,
+        )
     }
     
-    for name, config in configs.items():
+    for name, connection_config in connection_configs.items():
         print(f"\nTesting with {name}:")
         try:
-            context = Context(config={"gateways": {"default": {"connection": config}}})
+            config = Config(gateways=GatewayConfig(connection=connection_config))
+            context = Context(config=config)
             
             # Test ping
-            context._engine_adapter.ping()
+            context.engine_adapter.ping()
             print("  ✓ Ping successful")
             
             # Test query
@@ -95,7 +95,7 @@ def test_raw_pyodbc():
     if not driver_name:
         return
         
-    conn_str = f"DRIVER={{{driver_name}}};SERVER=sii-server;DATABASE=test;UID=ewuys;PWD=your_password"
+    conn_str = f"DRIVER={{{driver_name}}};SERVER=sii-server;DATABASE=sunshine;UID=ewuys;Authentication=Windows"
     
     try:
         conn = pyodbc.connect(conn_str)
