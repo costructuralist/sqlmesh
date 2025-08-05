@@ -46,8 +46,8 @@ config = Config(
     },
     
     # Environment configuration
-    environment_ttl="7 days",
-    snapshot_ttl="30 days",
+    environment_ttl="in 7 days",
+    snapshot_ttl="in 30 days",
     
     # Model defaults
     model_defaults={
