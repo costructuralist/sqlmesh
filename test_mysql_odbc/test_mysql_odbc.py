@@ -12,7 +12,7 @@ def list_mysql_drivers():
     drivers = [x for x in pyodbc.drivers() if 'MySQL' in x]
     for driver in drivers:
         print(f"  - {driver}")
-    return drivers[0] if drivers else None
+    return drivers[-1] if drivers else None
 
 def test_connection_config():
     """Test MySQL connection configurations"""
@@ -52,6 +52,8 @@ def test_sqlmesh_context():
     if not driver_name:
         return
     
+    print(f"Using driver: {driver_name}")
+
     # Test configurations
     connection_configs = {
         # "pymysql": MySQLConnectionConfig(
@@ -83,6 +85,9 @@ def test_sqlmesh_context():
             # Test query
             df = context.fetchdf("SELECT VERSION() as version, DATABASE() as db")
             print(f"  ✓ Query successful: MySQL {df['version'][0]}")
+
+            # df = context.fetchdf("SELECT * FROM sunshine.academies")
+            # print(f"  ✓ Query successful: MySQL {df}")
             
         except Exception as e:
             print(f"  ✗ Error: {e}")
@@ -112,6 +117,6 @@ if __name__ == "__main__":
     print("MySQL ODBC Testing Script")
     print("=" * 50)
     
-    test_raw_pyodbc()
-    test_connection_config()
+    # test_raw_pyodbc()
+    # test_connection_config()
     test_sqlmesh_context()
