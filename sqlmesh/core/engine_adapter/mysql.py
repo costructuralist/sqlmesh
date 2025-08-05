@@ -187,4 +187,15 @@ class MySQLEngineAdapter(
         )
 
     def ping(self) -> None:
-        self._connection_pool.get().ping(reconnect=False)
+        conn = self._connection_pool.get()
+        if hasattr(conn, 'ping'):
+            # pymysql has a ping method
+            conn.ping(reconnect=False)
+        else:
+            # For pyodbc and other drivers without ping method
+            try:
+                cursor = conn.cursor()
+                cursor.execute("SELECT 1")
+                cursor.close()
+            except Exception:
+                raise
