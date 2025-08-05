@@ -1443,6 +1443,15 @@ class MySQLConnectionConfig(ConnectionConfig):
     collation: t.Optional[str] = None
     ssl_disabled: t.Optional[bool] = None
 
+    # Driver options
+    driver: t.Literal["pymysql", "pyodbc"] = "pymysql"
+    # PyODBC specific options
+    driver_name: t.Optional[str] = None
+    trust_server_certificate: t.Optional[bool] = None
+    encrypt: t.Optional[bool] = None
+    # Dictionary of arbitrary ODBC connection properties
+    odbc_properties: t.Optional[t.Dict[str, t.Any]] = None
+
     concurrent_tasks: int = 4
     register_comments: bool = True
     pre_ping: bool = True
@@ -1452,7 +1461,30 @@ class MySQLConnectionConfig(ConnectionConfig):
     DISPLAY_NAME: t.ClassVar[t.Literal["MySQL"]] = "MySQL"
     DISPLAY_ORDER: t.ClassVar[t.Literal[14]] = 14
 
-    _engine_import_validator = _get_engine_import_validator("pymysql", "mysql")
+    @model_validator(mode="before")
+    @classmethod
+    def _mysql_engine_import_validator(cls, data: t.Any) -> t.Any:
+        if not isinstance(data, dict):
+            return data
+
+        driver = data.get("driver", "pymysql")
+
+        # Define the mapping of driver to import module and extra name
+        driver_configs = {"pymysql": ("pymysql", "mysql"), "pyodbc": ("pyodbc", "mysql-odbc")}
+
+        if driver not in driver_configs:
+            raise ValueError(f"Unsupported driver: {driver}")
+
+        import_module, extra_name = driver_configs[driver]
+
+        # Use _get_engine_import_validator with decorate=False to get the raw validation function
+        # This avoids the __wrapped__ issue in Python 3.9
+        validator_func = _get_engine_import_validator(
+            import_module, driver, extra_name, decorate=False
+        )
+
+        # Call the raw validation function directly
+        return validator_func(cls, data)
 
     @property
     def _connection_kwargs_keys(self) -> t.Set[str]:
@@ -1465,12 +1497,22 @@ class MySQLConnectionConfig(ConnectionConfig):
             connection_keys.add("port")
         if self.database is not None:
             connection_keys.add("database")
-        if self.charset is not None:
-            connection_keys.add("charset")
-        if self.collation is not None:
-            connection_keys.add("collation")
-        if self.ssl_disabled is not None:
-            connection_keys.add("ssl_disabled")
+        
+        if self.driver == "pymysql":
+            if self.charset is not None:
+                connection_keys.add("charset")
+            if self.collation is not None:
+                connection_keys.add("collation")
+            if self.ssl_disabled is not None:
+                connection_keys.add("ssl_disabled")
+        elif self.driver == "pyodbc":
+            connection_keys.update({
+                "driver_name",
+                "trust_server_certificate",
+                "encrypt",
+                "odbc_properties",
+            })
+        
         return connection_keys
 
     @property
@@ -1479,7 +1521,72 @@ class MySQLConnectionConfig(ConnectionConfig):
 
     @property
     def _connection_factory(self) -> t.Callable:
-        from pymysql import connect
+        if self.driver == "pymysql":
+            from pymysql import connect
+
+            return connect
+
+        import pyodbc
+
+        def connect(**kwargs: t.Any) -> t.Callable:
+            # Extract parameters for connection string
+            host = kwargs.pop("host")
+            port = kwargs.pop("port", 3306)
+            database = kwargs.pop("database", "")
+            user = kwargs.pop("user", None)
+            password = kwargs.pop("password", None)
+            driver_name = kwargs.pop("driver_name", "MySQL ODBC 9.3 Unicode Driver")
+            trust_server_certificate = kwargs.pop("trust_server_certificate", False)
+            encrypt = kwargs.pop("encrypt", False)
+
+            # Build connection string
+            conn_str_parts = [
+                f"DRIVER={{{driver_name}}}",
+                f"SERVER={host}",
+                f"PORT={port}",
+            ]
+
+            if database:
+                conn_str_parts.append(f"DATABASE={database}")
+
+            # MySQL typically doesn't need these but we support them for consistency
+            if encrypt:
+                conn_str_parts.append("SSLMODE=REQUIRED")
+            if trust_server_certificate:
+                conn_str_parts.append("SSLVERIFY=0")
+
+            # Standard MySQL authentication
+            if user:
+                conn_str_parts.append(f"UID={user}")
+            if password:
+                conn_str_parts.append(f"PWD={password}")
+
+            # Add any additional ODBC properties from the odbc_properties dictionary
+            if self.odbc_properties:
+                for key, value in self.odbc_properties.items():
+                    # Skip properties that we've already set above
+                    if key.lower() in (
+                        "driver",
+                        "server",
+                        "port",
+                        "database",
+                        "uid",
+                        "pwd",
+                        "sslmode",
+                        "sslverify",
+                    ):
+                        continue
+
+                    # Handle boolean values properly
+                    if isinstance(value, bool):
+                        conn_str_parts.append(f"{key}={1 if value else 0}")
+                    else:
+                        conn_str_parts.append(f"{key}={value}")
+
+            # Create the connection string
+            conn_str = ";".join(conn_str_parts)
+
+            return pyodbc.connect(conn_str, autocommit=kwargs.get("autocommit", False))
 
         return connect
 
